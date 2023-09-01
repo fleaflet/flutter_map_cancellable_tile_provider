@@ -6,49 +6,45 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_map/flutter_map.dart';
 
-/// [TileProvider] to fetch tiles from the network, with cancellation support
+/// Specialized [TileProvider] that fetches tiles from the network, with
+/// cancellation support
 ///
-/// Unlike [NetworkTileProvider], this uses [Dio] and supports
-/// cancelling/aborting unnecessary HTTP requests in-flight. Tiles that are
-/// removed/pruned before they are fully loaded do not need to complete loading,
-/// and therefore do not need to complete the request/download. This results in
-/// the tiles currently in the map's camera/viewport being loaded faster, as the
-/// tiles loaded whilst panning, zooming, or rotating are pruned, freeing up HTTP
-/// connections. It may also result in a reduction of costs, as there are less
-/// full tile requests to your tile server, but this will depend on their backend
-/// configuration and how quickly the tile is pruned.
+/// {@template tp-desc}
 ///
-/// Note that these advantages only occur on the web, as only the web supports
-/// the abortion of HTTP requests. On other platforms, this acts equivalent to
-/// [NetworkTileProvider], except using 'package:dio' instead of 'package:http'.
+/// This could:
+///
+/// * Reduce tile loading durations
+/// * Reduce costly tile requests to tile servers*
+/// * Reduce (cellular) data consumption
+///
+/// This provider uses [Dio] to abort unnecessary HTTP requests in-flight. Tiles
+/// that are removed/pruned before they are fully loaded do not need to complete
+/// loading, and therefore do not need to complete the HTTP interaction. Closing
+/// the connection in this way frees it up for other tile requests, and avoids
+/// downloading unused data.
+///
+/// On platforms where HTTP request abortion isn't supported (ie. platforms other
+/// than the web), this acts equivalent to `NetworkTileProvider`, except using
+/// 'dio' instead of 'http'.
+///
+/// There's no reason not use this tile provider if you run on the web platform,
+/// unless you'd rather avoid having 'dio' as a dependency. Once HTTP request
+/// abortion is
+/// [added to Dart's 'native' 'http' package (requested and PR opened)](https://github.com/dart-lang/http/issues/424),
+/// [NetworkTileProvider] will be updated to take advantage of it, replacing this
+/// provider.
+///
+/// ---
 ///
 /// On the web, the 'User-Agent' header cannot be changed as specified in
 /// [TileLayer.tileProvider]'s documentation, due to a Dart/browser limitation.
+/// {@endtemplate}
 class CancellableNetworkTileProvider extends TileProvider {
-  /// Create a [TileProvider] to fetch tiles from the network, with cancellation
-  /// support
+  /// Create a [CancellableNetworkTileProvider] to fetch tiles from the network,
+  /// with cancellation support
   ///
-  /// Unlike [NetworkTileProvider], this uses [Dio] and supports
-  /// cancelling/aborting unnecessary HTTP requests in-flight. Tiles that are
-  /// removed/pruned before they are fully loaded do not need to complete
-  /// loading, and therefore do not need to complete the request/download. This
-  /// results in the tiles currently in the map's camera/viewport being loaded
-  /// faster, as the tiles loaded whilst panning, zooming, or rotating are
-  /// pruned, freeing up HTTP connections. It may also result in a reduction of
-  /// costs, as there are less full tile requests to your tile server, but this
-  /// will depend on their backend configuration and how quickly the tile is
-  /// pruned.
-  ///
-  /// Note that these advantages only occur on the web, as only the web supports
-  /// the abortion of HTTP requests. On other platforms, this acts equivalent to
-  /// [NetworkTileProvider], except using 'package:dio' instead of
-  /// 'package:http'.
-  ///
-  /// On the web, the 'User-Agent' header cannot be changed as specified in
-  /// [TileLayer.tileProvider]'s documentation, due to a Dart/browser limitation.
-  CancellableNetworkTileProvider({
-    super.headers,
-  }) : _dio = Dio();
+  /// {@macro tp-desc}
+  CancellableNetworkTileProvider({super.headers}) : _dio = Dio();
 
   final Dio _dio;
   // ignore: use_late_for_private_fields_and_variables
@@ -154,4 +150,13 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
     cancelLoading.ignore();
     return decode(await ImmutableBuffer.fromUint8List(bytes));
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is _CNTPImageProvider && fallbackUrl == null && url == other.url);
+
+  @override
+  int get hashCode =>
+      Object.hashAll([url, if (fallbackUrl != null) fallbackUrl]);
 }
