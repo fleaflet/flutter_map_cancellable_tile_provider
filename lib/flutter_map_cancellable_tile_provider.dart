@@ -121,17 +121,23 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
     final cancelToken = CancelToken();
     unawaited(cancelLoading.then((_) => cancelToken.cancel()));
 
-    final Uint8List bytes;
     try {
-      final response = await tileProvider._dio.get<Uint8List>(
-        useFallback ? fallbackUrl! : url,
-        cancelToken: cancelToken,
-        options: Options(
-          headers: tileProvider.headers,
-          responseType: ResponseType.bytes,
+      final codec = decode(
+        await ImmutableBuffer.fromUint8List(
+          (await tileProvider._dio.get<Uint8List>(
+            useFallback ? fallbackUrl! : url,
+            cancelToken: cancelToken,
+            options: Options(
+              headers: tileProvider.headers,
+              responseType: ResponseType.bytes,
+            ),
+          ))
+              .data!,
         ),
       );
-      bytes = response.data!;
+
+      cancelLoading.ignore();
+      return codec;
     } on DioException catch (err) {
       if (CancelToken.isCancel(err)) {
         return decode(
@@ -146,9 +152,6 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
       if (useFallback || fallbackUrl == null) rethrow;
       return _loadAsync(key, chunkEvents, decode, useFallback: true);
     }
-
-    cancelLoading.ignore();
-    return decode(await ImmutableBuffer.fromUint8List(bytes));
   }
 
   @override
