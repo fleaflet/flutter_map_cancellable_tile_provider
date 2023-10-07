@@ -6,33 +6,32 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_map/flutter_map.dart';
 
-/// Specialized [TileProvider] that fetches tiles from the network, with
-/// cancellation support
+/// [TileProvider] that fetches tiles from the network, with the capability to
+/// cancel unnecessary HTTP tile requests
 ///
 /// {@template tp-desc}
 ///
-/// This could:
+/// Tiles that are removed/pruned before they are fully loaded do not need to
+/// complete (down)loading, and therefore do not need to complete the HTTP
+/// interaction. Cancelling these unnecessary tile requests early could:
 ///
-/// * Reduce tile loading durations
-/// * Reduce costly tile requests to tile servers*
-/// * Reduce (cellular) data consumption
+/// - Reduce tile loading durations (particularly on the web)
+/// - Reduce users' (cellular) data and cache space consumption
+/// - Reduce costly tile requests to tile servers*
+/// - Improve performance by reducing CPU and IO work
 ///
-/// This provider uses [Dio] to abort unnecessary HTTP requests in-flight. Tiles
-/// that are removed/pruned before they are fully loaded do not need to complete
-/// loading, and therefore do not need to complete the HTTP interaction. Closing
-/// the connection in this way frees it up for other tile requests, and avoids
-/// downloading unused data.
+/// This provider uses '[dio](https://pub.dev/packages/dio)', which supports
+/// aborting unnecessary HTTP requests in-flight, after they have already been
+/// sent.
 ///
-/// On platforms where HTTP request abortion isn't supported (ie. platforms other
-/// than the web), this acts equivalent to `NetworkTileProvider`, except using
-/// 'dio' instead of 'http'.
+/// Although HTTP request abortion is supported on all platforms, it is
+/// especially useful on the web - and therefore recommended for web apps. This
+/// is because the web platform has a limited number of simulatous HTTP requests,
+/// and so closing the requests allows new requests to be made for new tiles.
+/// On other platforms, the other benefits may still occur, but may not be as
+/// visible as on the web.
 ///
-/// There's no reason not use this tile provider if you run on the web platform,
-/// unless you'd rather avoid having 'dio' as a dependency. Once HTTP request
-/// abortion is
-/// [added to Dart's 'native' 'http' package (requested and PR opened)](https://github.com/dart-lang/http/issues/424),
-/// [NetworkTileProvider] will be updated to take advantage of it, replacing this
-/// provider.
+/// Once HTTP request abortion is [added to Dart's 'native' 'http' package (which already has a PR opened)](https://github.com/dart-lang/http/issues/424), `NetworkTileProvider` will be updated to take advantage of it, replacing and deprecating this provider. This tile provider is currently a seperate package and not the default due to the reliance on the additional Dio dependency.
 ///
 /// ---
 ///
