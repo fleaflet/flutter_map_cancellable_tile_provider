@@ -46,8 +46,6 @@ class CancellableNetworkTileProvider extends TileProvider {
   CancellableNetworkTileProvider({super.headers}) : _dio = Dio();
 
   final Dio _dio;
-  // ignore: use_late_for_private_fields_and_variables
-  ImmutableBuffer? _cancelledImage;
 
   @override
   bool get supportsCancelLoading => true;
@@ -144,10 +142,7 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
     } on DioException catch (err) {
       if (CancelToken.isCancel(err)) {
         return decode(
-          tileProvider._cancelledImage ??
-              await ImmutableBuffer.fromUint8List(
-                TileProvider.transparentImage,
-              ),
+          await ImmutableBuffer.fromUint8List(TileProvider.transparentImage),
         );
       }
       if (useFallback || fallbackUrl == null) rethrow;
