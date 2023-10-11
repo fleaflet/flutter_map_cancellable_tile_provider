@@ -144,9 +144,10 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
     } on DioException catch (err) {
       if (CancelToken.isCancel(err)) {
         return decode(
-          tileProvider._cancelledImage ??= await ImmutableBuffer.fromUint8List(
-            TileProvider.transparentImage,
-          ),
+          tileProvider._cancelledImage ??
+              await ImmutableBuffer.fromUint8List(
+                TileProvider.transparentImage,
+              ),
         );
       }
       if (useFallback || fallbackUrl == null) rethrow;
