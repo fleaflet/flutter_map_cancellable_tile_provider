@@ -1,6 +1,16 @@
-part of 'tile_provider.dart';
+import 'dart:async';
+import 'dart:ui';
 
-class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:meta/meta.dart';
+
+@internal
+@visibleForTesting
+class CancellableNetworkImageProvider
+    extends ImageProvider<CancellableNetworkImageProvider> {
   final String url;
   final String? fallbackUrl;
   final Map<String, String> headers;
@@ -10,7 +20,7 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
   final void Function() startedLoading;
   final void Function() finishedLoadingBytes;
 
-  const _CNTPImageProvider({
+  const CancellableNetworkImageProvider({
     required this.url,
     required this.fallbackUrl,
     required this.headers,
@@ -23,31 +33,27 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
 
   @override
   ImageStreamCompleter loadImage(
-    _CNTPImageProvider key,
+    CancellableNetworkImageProvider key,
     ImageDecoderCallback decode,
-  ) {
-    startedLoading();
+  ) =>
+      MultiFrameImageStreamCompleter(
+        codec: _load(key, decode),
+        scale: 1,
+        debugLabel: url,
+        informationCollector: () => [
+          DiagnosticsProperty('URL', url),
+          DiagnosticsProperty('Fallback URL', fallbackUrl),
+          DiagnosticsProperty('Current provider', key),
+        ],
+      );
 
-    return MultiFrameImageStreamCompleter(
-      codec: _loadBytes(key, decode)
-          .whenComplete(finishedLoadingBytes)
-          .then(ImmutableBuffer.fromUint8List)
-          .then(decode),
-      scale: 1,
-      debugLabel: url,
-      informationCollector: () => [
-        DiagnosticsProperty('URL', url),
-        DiagnosticsProperty('Fallback URL', fallbackUrl),
-        DiagnosticsProperty('Current provider', key),
-      ],
-    );
-  }
-
-  Future<Uint8List> _loadBytes(
-    _CNTPImageProvider key,
+  Future<Codec> _load(
+    CancellableNetworkImageProvider key,
     ImageDecoderCallback decode, {
     bool useFallback = false,
   }) {
+    startedLoading();
+
     final cancelToken = CancelToken();
     unawaited(cancelLoading.then((_) => cancelToken.cancel()));
 
@@ -57,22 +63,26 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
           cancelToken: cancelToken,
           options: Options(headers: headers, responseType: ResponseType.bytes),
         )
-        .then((response) => response.data!)
-        .catchError((Object err, StackTrace stack) {
+        .whenComplete(finishedLoadingBytes)
+        .then((response) => ImmutableBuffer.fromUint8List(response.data!))
+        .then(decode)
+        .onError<Exception>((err, stack) {
       scheduleMicrotask(() => PaintingBinding.instance.imageCache.evict(key));
       if (err is DioException && CancelToken.isCancel(err)) {
-        return TileProvider.transparentImage;
+        return ImmutableBuffer.fromUint8List(TileProvider.transparentImage)
+            .then(decode);
       }
       if (useFallback || fallbackUrl == null) {
-        if (silenceExceptions) return TileProvider.transparentImage;
-        return Future<Uint8List>.error(err, stack);
+        if (!silenceExceptions) throw err;
+        return ImmutableBuffer.fromUint8List(TileProvider.transparentImage)
+            .then(decode);
       }
-      return _loadBytes(key, decode, useFallback: true);
+      return _load(key, decode, useFallback: true);
     });
   }
 
   @override
-  SynchronousFuture<_CNTPImageProvider> obtainKey(
+  SynchronousFuture<CancellableNetworkImageProvider> obtainKey(
     ImageConfiguration configuration,
   ) =>
       SynchronousFuture(this);
@@ -80,7 +90,9 @@ class _CNTPImageProvider extends ImageProvider<_CNTPImageProvider> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is _CNTPImageProvider && fallbackUrl == null && url == other.url);
+      (other is CancellableNetworkImageProvider &&
+          fallbackUrl == null &&
+          url == other.url);
 
   @override
   int get hashCode =>

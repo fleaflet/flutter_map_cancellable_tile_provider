@@ -27,7 +27,8 @@ environment:
   flutter: ">=3.10.0"
 
 dependencies:
-  dio: ^5.3.3
+  dio: ^5.4.0
   flutter:
     sdk: flutter
-  flutter_map: ^6.0.0
+  flutter_map: ^6.0.1
+  meta: ^1.11.0

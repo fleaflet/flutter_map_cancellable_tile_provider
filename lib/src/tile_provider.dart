@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:ui';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_map/flutter_map.dart';
 
-part 'image_provider.dart';
+import 'image_provider.dart';
 
 /// [TileProvider] that fetches tiles from the network, with the capability to
 /// cancel unnecessary HTTP tile requests
@@ -64,7 +62,7 @@ base class CancellableNetworkTileProvider extends TileProvider {
   /// over the network, and just return a transparent tile
   final bool silenceExceptions;
 
-  /// Long living client used to make all tile requests by [_CNTPImageProvider]
+  /// Long living client used to make all tile requests by [CancellableNetworkImageProvider]
   /// for the duration that this provider is alive
   final Dio _dioClient;
 
@@ -86,7 +84,7 @@ base class CancellableNetworkTileProvider extends TileProvider {
     TileLayer options,
     Future<void> cancelLoading,
   ) =>
-      _CNTPImageProvider(
+      CancellableNetworkImageProvider(
         url: getTileUrl(coordinates, options),
         fallbackUrl: getTileFallbackUrl(coordinates, options),
         headers: headers,
