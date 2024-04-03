@@ -1,6 +1,6 @@
 name: flutter_map_cancellable_tile_provider
 description: Plugin for flutter_map that provides a `TileProvider` with the capability to cancel unnecessary HTTP tile requests
-version: 2.0.0
+version: 3.0.0-dev.1
 
 homepage: https://github.com/fleaflet/flutter_map
 repository: https://github.com/fleaflet/flutter_map_cancellable_tile_provider
@@ -30,5 +30,5 @@ dependencies:
   dio: ^5.4.0
   flutter:
     sdk: flutter
-  flutter_map: ^6.0.1
+  flutter_map: ^7.0.0-dev.1
   meta: ^1.9.1
