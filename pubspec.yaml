@@ -31,4 +31,4 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_map: ^7.0.2
-  meta: ^1.15.0
+  meta: ^1.11.0
