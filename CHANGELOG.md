@@ -1,6 +1,11 @@
 # CHANGELOG
 
-## [3.0.0] - 2024/06/XX
+## [3.0.1] - 2024/09/12
+
+* Minor dependency bumps
+* Minor documentation improvements
+
+## [3.0.0] - 2024/06/08
 
 * Updated to support flutter_map v7
 
