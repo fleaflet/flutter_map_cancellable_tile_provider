@@ -15,5 +15,3 @@ Although HTTP request abortion is supported on all platforms, it is especially u
 On other platforms, the other benefits may still occur, but may not be as visible as on the web.
 
 Once HTTP request abortion is [added to Dart's 'native' 'http' package (which already has a PR opened)](https://github.com/dart-lang/http/issues/424), `NetworkTileProvider` will be updated to take advantage of it, replacing and deprecating this provider. This tile provider is currently a separate package and not the default due to the reliance on the additional Dio dependency.
-
-> WASM is currently not supported, because Dio does not yet support it.
