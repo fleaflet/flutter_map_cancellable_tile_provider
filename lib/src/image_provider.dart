@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:ui';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:meta/meta.dart';
+import 'dio_singleton.dart';
 
 @internal
 @visibleForTesting
@@ -14,17 +14,18 @@ class CancellableNetworkImageProvider
   final String url;
   final String? fallbackUrl;
   final Map<String, String> headers;
-  final Dio dioClient;
   final Future<void> cancelLoading;
   final bool silenceExceptions;
   final void Function() startedLoading;
   final void Function() finishedLoadingBytes;
 
+  /// Use singleton Dio
+  final Dio dioClient = DioSingleton.dioInstance;
+
   const CancellableNetworkImageProvider({
     required this.url,
     required this.fallbackUrl,
     required this.headers,
-    required this.dioClient,
     required this.cancelLoading,
     required this.silenceExceptions,
     required this.startedLoading,
