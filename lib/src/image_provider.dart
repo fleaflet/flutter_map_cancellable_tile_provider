@@ -18,9 +18,7 @@ class CancellableNetworkImageProvider
   final bool silenceExceptions;
   final void Function() startedLoading;
   final void Function() finishedLoadingBytes;
-
-  /// Use singleton Dio
-  final Dio dioClient = DioSingleton.dioInstance;
+  final Dio dioClient;
 
   const CancellableNetworkImageProvider({
     required this.url,
@@ -30,6 +28,7 @@ class CancellableNetworkImageProvider
     required this.silenceExceptions,
     required this.startedLoading,
     required this.finishedLoadingBytes,
+    required this.dioClient,
   });
 
   @override
