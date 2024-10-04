@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:collection';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_map/flutter_map.dart';
-
+import 'dio_singleton.dart';
 import 'image_provider.dart';
 
 /// [TileProvider] that fetches tiles from the network, with the capability to
@@ -54,9 +54,8 @@ base class CancellableNetworkTileProvider extends TileProvider {
   /// {@macro fmctp-desc}
   CancellableNetworkTileProvider({
     super.headers,
-    Dio? dioClient,
     this.silenceExceptions = false,
-  }) : _dioClient = dioClient ?? Dio();
+  });
 
   /// Whether to ignore exceptions and errors that occur whilst fetching tiles
   /// over the network, and just return a transparent tile
@@ -64,7 +63,8 @@ base class CancellableNetworkTileProvider extends TileProvider {
 
   /// Long living client used to make all tile requests by [CancellableNetworkImageProvider]
   /// for the duration that this provider is alive
-  final Dio _dioClient;
+  /// Use dio singleton
+  final Dio _dioClient = DioSingleton.dioInstance;
 
   /// Each [Completer] is completed once the corresponding tile has finished
   /// loading
@@ -88,7 +88,6 @@ base class CancellableNetworkTileProvider extends TileProvider {
         url: getTileUrl(coordinates, options),
         fallbackUrl: getTileFallbackUrl(coordinates, options),
         headers: headers,
-        dioClient: _dioClient,
         cancelLoading: cancelLoading,
         silenceExceptions: silenceExceptions,
         startedLoading: () => _tilesInProgress[coordinates] = Completer(),
@@ -96,6 +95,7 @@ base class CancellableNetworkTileProvider extends TileProvider {
           _tilesInProgress[coordinates]?.complete();
           _tilesInProgress.remove(coordinates);
         },
+        dioClient: _dioClient,
       );
 
   @override
@@ -103,7 +103,6 @@ base class CancellableNetworkTileProvider extends TileProvider {
     if (_tilesInProgress.isNotEmpty) {
       await Future.wait(_tilesInProgress.values.map((c) => c.future));
     }
-    _dioClient.close();
     super.dispose();
   }
 }
