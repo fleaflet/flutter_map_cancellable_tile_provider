@@ -95,6 +95,7 @@ base class CancellableNetworkTileProvider extends TileProvider {
           _tilesInProgress[coordinates]?.complete();
           _tilesInProgress.remove(coordinates);
         },
+        dioClient: _dioClient,
       );
 
   @override
