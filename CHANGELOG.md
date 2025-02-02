@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## [3.1.0] - 2025/02/02
+
+* Support flutter_map v8
+* Fixed issue where externally created Dio client was closed internally - [#13](https://github.com/fleaflet/flutter_map_cancellable_tile_provider/pull/13)
+
 ## [3.0.2] - 2024/09/12
 
 * Minor dependency bumps
