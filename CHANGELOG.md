@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [3.1.1] - 2025/07/09
+
+* Prepare for deprecation
+
 ## [3.1.0] - 2025/02/02
 
 * Support flutter_map v8
